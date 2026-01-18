@@ -32,12 +32,18 @@ if 'generated_images' not in st.session_state:
     st.session_state.generated_images = []
 if 'cover_image' not in st.session_state:
     st.session_state.cover_image = None
+if 'cover_image_original' not in st.session_state:
+    st.session_state.cover_image_original = None
 if 'title_suggestions' not in st.session_state:
     st.session_state.title_suggestions = []
 if 'selected_title' not in st.session_state:
     st.session_state.selected_title = ""
+if 'author_name' not in st.session_state:
+    st.session_state.author_name = "Anna Wilga"
+if 'custom_title_input' not in st.session_state:
+    st.session_state.custom_title_input = ""
 
-# CSS dla lepszego wyglądu
+# CSS
 st.markdown("""
     <style>
     .main-header {
@@ -72,7 +78,7 @@ st.markdown("""
 # Nagłówek
 st.markdown('<p class="main-header">📚 Fabryka Opowiadań 📚</p>', unsafe_allow_html=True)
 
-# Sidebar - Panel boczny
+# Sidebar
 with st.sidebar:
     st.header("⚙️ Ustawienia")
     
@@ -84,7 +90,6 @@ with st.sidebar:
         if api_key_input:
             try:
                 openai.api_key = api_key_input
-                # Test połączenia
                 client = openai.OpenAI(api_key=api_key_input)
                 client.models.list()
                 st.session_state.api_key = api_key_input
@@ -118,37 +123,24 @@ with st.sidebar:
     )
     
     st.divider()
-    st.markdown("---")
     st.caption("💡 Wypełnij parametry i wygeneruj opowiadanie!")
 
-# Główna zawartość
+# Zakładki
 tab1, tab2, tab3 = st.tabs(["📝 Tworzenie", "🎨 Edycja i Export", "👤 O mnie"])
 
+# -------------------------------
+# TAB 1 — TWORZENIE OPOWIADANIA
+# -------------------------------
 with tab1:
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.subheader("🎭 Parametry opowiadania")
         
-        # Grupa wiekowa
-        age_group = st.selectbox(
-            "Grupa wiekowa",
-            ["Dla dzieci", "Młodzieżowy", "Dla dorosłych"]
-        )
+        age_group = st.selectbox("Grupa wiekowa", ["Dla dzieci", "Młodzieżowy", "Dla dorosłych"])
+        genre = st.selectbox("Gatunek", ["Bajka/Baśń", "Fantasy", "Przygoda", "Komedia", "Horror", "Romans", "Sci-Fi", "Dramat"])
+        location = st.radio("Miejsce akcji", ["Jedno miejsce", "Dwa miejsca", "Losowy wybór AI"])
         
-        # Gatunek
-        genre = st.selectbox(
-            "Gatunek",
-            ["Bajka/Baśń", "Fantasy", "Przygoda", "Komedia", "Horror", "Romans", "Sci-Fi", "Dramat"]
-        )
-        
-        # Miejsce akcji
-        location = st.radio(
-            "Miejsce akcji",
-            ["Jedno miejsce", "Dwa miejsca", "Losowy wybór AI"]
-        )
-        
-        # Zakończenie
         st.write("**Zakończenie:**")
         col_a, col_b = st.columns(2)
         with col_a:
@@ -159,13 +151,11 @@ with tab1:
     with col2:
         st.subheader("👥 Bohaterowie")
         
-        # Główny bohater
         main_character = st.text_area(
             "Główny bohater (imię + krótki opis)",
-            placeholder="np. Ania - odważna 10-letnia dziewczynka, która kocha przygody"
+            placeholder="np. Ania – odważna 10-letnia dziewczynka..."
         )
         
-        # Dodatkowi bohaterowie
         num_characters = st.number_input("Liczba dodatkowych bohaterów", min_value=0, max_value=5, value=1)
         
         additional_characters = []
@@ -173,14 +163,14 @@ with tab1:
             st.write(f"**Bohater {i+1}:**")
             char_col1, char_col2 = st.columns([2, 1])
             with char_col1:
-                char_name = st.text_input(f"Imię i opis", key=f"char_name_{i}", placeholder="np. Tomek - przyjaciel")
+                char_name = st.text_input(f"Imię i opis", key=f"char_name_{i}")
             with char_col2:
                 char_type = st.selectbox("Charakter", ["Pozytywny", "Negatywny"], key=f"char_type_{i}")
             if char_name:
                 additional_characters.append({"name": char_name, "type": char_type})
     
     st.divider()
-    
+
     # Ilustracje
     st.subheader("🎨 Ilustracje")
     col_ill1, col_ill2, col_ill3 = st.columns(3)
@@ -196,46 +186,46 @@ with tab1:
     
     with col_ill3:
         if include_illustrations:
-            illustration_style = st.selectbox(
-                "Styl ilustracji",
-                ["Naturalne", "Komiks", "Akwarela", "Pixel Art"]
-            )
+            illustration_style = st.selectbox("Styl ilustracji", ["Naturalne", "Komiks", "Akwarela", "Pixel Art"])
         else:
             illustration_style = "Naturalne"
     
     st.divider()
-    
+
     # Okładka
     st.subheader("📖 Okładka książki")
-    col_cov1, col_cov2 = st.columns([2, 1])
     
-    with col_cov1:
-        cover_sketch = st.text_area(
-            "Szkic okładki (opis wizualny)",
-            placeholder="np. Magiczny las z gwiazdami, w tle zamek..."
-        )
-        cover_description = st.text_input(
-            "Krótki opis do okładki",
-            placeholder="np. Opowieść o odwadze i przyjaźni"
-        )
+    include_cover = st.checkbox("Generuj okładkę", value=True)
     
-    with col_cov2:
-        author_name = st.text_input("Autor", value="Anna Wilga")
+    if include_cover:
+        col_cov1, col_cov2 = st.columns([2, 1])
+        
+        with col_cov1:
+            cover_sketch = st.text_area("Szkic okładki", placeholder="np. Magiczny las...")
+            cover_description = st.text_input("Krótki opis okładki", placeholder="np. Opowieść o odwadze...")
+        
+        with col_cov2:
+            author_name = st.text_input("Autor", value=st.session_state.author_name)
+            st.session_state.author_name = author_name
+    else:
+        cover_sketch = ""
+        cover_description = ""
+        author_name = st.text_input("Autor", value=st.session_state.author_name)
+        st.session_state.author_name = author_name
     
     st.divider()
-    
+
     # Przycisk generowania
     if st.button("🚀 Generuj opowiadanie", type="primary", use_container_width=True):
         if not st.session_state.api_connected:
-            st.error("❌ Najpierw połącz się z API OpenAI w panelu bocznym!")
+            st.error("❌ Najpierw połącz się z API!")
         elif not main_character:
             st.error("❌ Podaj głównego bohatera!")
         else:
-            with st.spinner("✨ Tworzę opowiadanie... To może potrwać kilka minut..."):
+            with st.spinner("✨ Tworzę opowiadanie..."):
                 try:
                     generator = StoryGenerator(st.session_state.api_key, model)
                     
-                    # Parametry dla generatora
                     params = {
                         "age_group": age_group,
                         "genre": genre,
@@ -249,33 +239,38 @@ with tab1:
                         "illustration_style": illustration_style,
                         "cover_sketch": cover_sketch,
                         "cover_description": cover_description,
-                        "author_name": author_name
+                        "author_name": st.session_state.author_name
                     }
                     
-                    # Generowanie opowiadania
                     story = generator.generate_story(params)
                     st.session_state.story_text = story
                     
-                    # Generowanie propozycji tytułów
                     st.info("📝 Generuję propozycje tytułów...")
                     titles = generator.generate_title_suggestions(story)
                     st.session_state.title_suggestions = titles
                     
-                    # Generowanie okładki
                     if cover_sketch:
                         st.info("🎨 Tworzę okładkę...")
                         cover = generator.generate_cover(cover_sketch, cover_description, illustration_style)
-                        st.session_state.cover_image = cover
+                        if cover is None:
+                            st.error("❌ Nie udało się wygenerować okładki. Spróbuj zmienić opis lub styl.")
+                        else:
+                            st.session_state.cover_image = cover
+                            st.session_state.cover_image_original = cover.copy()
                     
                     st.success("✅ Opowiadanie wygenerowane!")
                     st.rerun()
-                    
+                
                 except Exception as e:
-                    st.error(f"❌ Błąd podczas generowania: {str(e)}")
+                    st.error(f"❌ Błąd: {str(e)}")
 
+# -------------------------------
+# TAB 2 — EDYCJA I EXPORT
+# -------------------------------
 with tab2:
     if st.session_state.story_text:
-        # Wybór tytułu (jeśli są propozycje)
+
+        # WYBÓR TYTUŁU - POPRAWIONA SEKCJA
         if st.session_state.title_suggestions:
             st.subheader("📖 Wybierz tytuł dla swojego opowiadania")
             
@@ -283,56 +278,96 @@ with tab2:
             
             with col_t1:
                 title_options = st.session_state.title_suggestions + ["Własny tytuł..."]
+
+                # Radio button z zapamiętanym stanem
                 selected = st.radio(
                     "Propozycje tytułów:",
                     title_options,
-                    index=0 if not st.session_state.selected_title else (
-                        title_options.index(st.session_state.selected_title) 
-                        if st.session_state.selected_title in title_options 
-                        else len(title_options) - 1
-                    )
+                    index=(
+                        title_options.index(st.session_state.selected_title)
+                        if st.session_state.selected_title in title_options
+                        else 0
+                    ),
+                    key="title_radio"
                 )
-                
+
+                # POPRAWIONA LOGIKA - używamy osobnego klucza dla własnego tytułu
                 if selected == "Własny tytuł...":
-                    custom_title = st.text_input("Wpisz własny tytuł:", value=st.session_state.selected_title)
-                    st.session_state.selected_title = custom_title
+                    custom_title = st.text_input(
+                        "Wpisz własny tytuł:",
+                        value=st.session_state.custom_title_input,
+                        key="custom_title_field"
+                    )
+                    
+                    # Zapisz do osobnego stanu
+                    if custom_title != st.session_state.custom_title_input:
+                        st.session_state.custom_title_input = custom_title
+                    
+                    # Ustaw jako selected_title tylko jeśli nie jest pusty
+                    if custom_title.strip():
+                        st.session_state.selected_title = custom_title.strip()
+                    else:
+                        st.session_state.selected_title = ""
                 else:
+                    # Wybrany jeden z sugerowanych tytułów
                     st.session_state.selected_title = selected
+                    st.session_state.custom_title_input = ""  # Wyczyść pole własnego tytułu
             
             with col_t2:
                 st.write(" ")
                 st.write(" ")
-                if st.button("✨ Nałóż tytuł na okładkę", use_container_width=True):
-                    if st.session_state.cover_image and st.session_state.selected_title:
+                
+                # Walidacja przed włączeniem przycisku
+                can_apply = bool(st.session_state.selected_title and st.session_state.selected_title.strip())
+                
+                if st.button(
+                    "✨ Nałóż tytuł na okładkę", 
+                    use_container_width=True,
+                    disabled=not can_apply
+                ):
+                    if st.session_state.cover_image_original is None:
+                        st.error("⚠️ Najpierw wygeneruj okładkę w zakładce 'Tworzenie'!")
+                    elif not st.session_state.selected_title:
+                        st.error("⚠️ Wybierz lub wpisz tytuł!")
+                    else:
                         with st.spinner("🎨 Nakładam tytuł..."):
                             try:
                                 generator = StoryGenerator(st.session_state.api_key, model)
+
+                                # KLUCZOWA POPRAWKA: ZAWSZE zaczynamy od czystej okładki
+                                base_cover = st.session_state.cover_image_original.copy()
+
                                 cover_with_title = generator.add_title_to_cover(
-                                    st.session_state.cover_image,
+                                    base_cover,
                                     st.session_state.selected_title,
-                                    author_name
+                                    st.session_state.author_name
                                 )
+
                                 st.session_state.cover_image = cover_with_title
-                                st.success("✅ Tytuł dodany do okładki!")
+                                st.success(f"✅ Tytuł '{st.session_state.selected_title}' dodany do okładki!")
                                 st.rerun()
+
                             except Exception as e:
                                 st.error(f"❌ Błąd: {str(e)}")
-                    elif not st.session_state.cover_image:
-                        st.warning("⚠️ Najpierw wygeneruj okładkę!")
-                    else:
-                        st.warning("⚠️ Wybierz tytuł!")
+                
+                # Info jeśli tytuł pusty
+                if not can_apply:
+                    st.caption("⚠️ Wybierz lub wpisz tytuł")
             
             # Podgląd okładki
-            if st.session_state.cover_image:
-                st.image(st.session_state.cover_image, caption="Okładka", width=300)
+            st.divider()
+            if st.session_state.cover_image is not None:
+                st.image(st.session_state.cover_image, caption="Podgląd okładki", width=300)
+            else:
+                st.info("ℹ️ Okładka bez tytułu. Wygeneruj okładkę w zakładce 'Tworzenie'.")
             
             st.divider()
-        
+
+        # EDYCJA TEKSTU
         st.subheader("📝 Edycja opowiadania")
         
-        # Edytor z formatowaniem
         edited_story = st.text_area(
-            "Edytuj opowiadanie (możesz naniosić poprawki)",
+            "Edytuj opowiadanie (możesz nanieść poprawki)",
             value=st.session_state.story_text,
             height=400
         )
@@ -342,8 +377,8 @@ with tab2:
             st.success("✅ Zmiany zapisane!")
         
         st.divider()
-        
-        # Modyfikacja opowiadania
+
+        # MODYFIKACJA TEKSTU
         st.subheader("🔄 Modyfikuj opowiadanie")
         col_mod1, col_mod2 = st.columns(2)
         
@@ -372,8 +407,8 @@ with tab2:
                 st.warning("⚠️ Wprowadź przynajmniej jedną zmianę")
         
         st.divider()
-        
-        # Generowanie ilustracji dla zaznaczonego fragmentu
+
+        # GENEROWANIE ILUSTRACJI DO FRAGMENTU
         st.subheader("🖼️ Generuj ilustrację dla fragmentu")
         selected_fragment = st.text_area(
             "Zaznacz i wklej fragment opowiadania do zilustrowania",
@@ -392,30 +427,56 @@ with tab2:
                     try:
                         generator = StoryGenerator(st.session_state.api_key, model)
                         image = generator.generate_illustration(selected_fragment, fragment_style)
-                        st.session_state.generated_images.append(image)
-                        st.success("✅ Ilustracja wygenerowana!")
-                        st.image(image, caption="Nowa ilustracja")
+                        if image is None:
+                            st.error("❌ Nie udało się wygenerować ilustracji. Spróbuj zmienić fragment lub styl.")
+                        else:
+                            st.session_state.generated_images.append(image)
+                            st.success("✅ Ilustracja wygenerowana!")
+                            st.image(image, caption="Nowa ilustracja")
                     except Exception as e:
                         st.error(f"❌ Błąd: {str(e)}")
             else:
                 st.warning("⚠️ Wklej fragment tekstu do zilustrowania")
         
         st.divider()
-        
-        # Export
+
+        # WYBÓR ILUSTRACJI DO PDF
+        st.subheader("🖼️ Wybierz ilustracje do PDF")
+
+        selected_illustrations = []
+        if st.session_state.generated_images:
+            cols = st.columns(3)
+
+            for idx, img in enumerate(st.session_state.generated_images):
+                with cols[idx % 3]:
+                    if img is not None:
+                        st.image(img, caption=f"Ilustracja {idx+1}", width=200)
+                        use_it = st.checkbox(f"Użyj ilustracji {idx+1}", key=f"use_img_{idx}")
+                        if use_it:
+                            selected_illustrations.append(img)
+                    else:
+                        st.error(f"❌ Ilustracja {idx+1} nie została wygenerowana.")
+        else:
+            st.info("Brak ilustracji — wygeneruj je w zakładce Tworzenie lub powyżej.")
+
+        st.divider()
+
+        # EXPORT
         st.subheader("📥 Eksport")
-        
+
         col_exp1, col_exp2, col_exp3 = st.columns(3)
-        
+
+        # --- PDF ---
         with col_exp1:
             if st.button("📄 Eksport do PDF", use_container_width=True):
                 try:
                     pdf_gen = PDFGenerator()
                     pdf_file = pdf_gen.create_pdf(
                         st.session_state.story_text,
-                        author_name,
+                        st.session_state.author_name,
                         st.session_state.cover_image,
-                        st.session_state.generated_images
+                        selected_illustrations if selected_illustrations else None,
+                        st.session_state.selected_title  # Przekazujemy tytuł
                     )
                     
                     with open(pdf_file, "rb") as f:
@@ -428,7 +489,8 @@ with tab2:
                         )
                 except Exception as e:
                     st.error(f"❌ Błąd: {str(e)}")
-        
+
+        # --- EBOOK ---
         with col_exp2:
             ebook_format = st.selectbox("Format eBook", ["EPUB", "MOBI"])
             if st.button(f"📚 Eksport do {ebook_format}", use_container_width=True):
@@ -436,10 +498,10 @@ with tab2:
                     ebook_gen = EbookGenerator()
                     ebook_file = ebook_gen.create_ebook(
                         st.session_state.story_text,
-                        author_name,
+                        st.session_state.author_name,
                         ebook_format.lower(),
                         st.session_state.cover_image,
-                        st.session_state.generated_images
+                        selected_illustrations if selected_illustrations else None
                     )
                     
                     with open(ebook_file, "rb") as f:
@@ -452,7 +514,8 @@ with tab2:
                         )
                 except Exception as e:
                     st.error(f"❌ Błąd: {str(e)}")
-        
+
+        # --- AUDIOBOOK ---
         with col_exp3:
             if AUDIO_AVAILABLE:
                 st.write("**Audiobook MP3**")
@@ -482,38 +545,44 @@ with tab2:
                         except Exception as e:
                             st.error(f"❌ Błąd: {str(e)}")
             else:
-                st.info("🎧 **Audiobook**\n\nFunkcja audiobooka wymaga lokalnej instalacji z FFmpeg.\n\nPobierz kod z GitHub i uruchom lokalnie aby używać tej funkcji.")
-        
-        # Podgląd ilustracji
+                st.info("🎧 Audiobook wymaga lokalnej instalacji FFmpeg.")
+
+        # PODGLĄD WSZYSTKICH ILUSTRACJI
         if st.session_state.generated_images:
             st.divider()
-            st.subheader("🖼️ Wygenerowane ilustracje")
+            st.subheader("🖼️ Wszystkie wygenerowane ilustracje")
             cols = st.columns(3)
             for idx, img in enumerate(st.session_state.generated_images):
                 with cols[idx % 3]:
-                    st.image(img, caption=f"Ilustracja {idx+1}")
+                    if img is not None:
+                        st.image(img, caption=f"Ilustracja {idx+1}")
+                    else:
+                        st.error(f"❌ Ilustracja {idx+1} nie została wygenerowana.")
     
     else:
         st.info("📝 Najpierw wygeneruj opowiadanie w zakładce 'Tworzenie'")
 
+# -------------------------------
+# TAB 3 — O AUTORCE
+# -------------------------------
 with tab3:
     st.subheader("👤 O autorce aplikacji")
     
     st.markdown("""
     ### Anna Wilga
     
-    Tworzenie tej aplikacji to moja **pasja**! Łączę technologię z kreatywnością, 
-    aby każdy mógł stworzyć własną, unikalną historię. 
+    Tworzenie tej aplikacji to moja **pasja**!  
+    Łączę technologię z kreatywnością, aby każdy mógł stworzyć własną, unikalną historię.
     
-    Wierzę, że każdy ma w sobie opowieść wartą opowiedzenia, a nowoczesne 
-    narzędzia AI mogą pomóc ją wypowiedzieć w sposób, który wcześniej był 
-    niedostępny.
+    Wierzę, że każdy ma w sobie opowieść wartą opowiedzenia,  
+    a nowoczesne narzędzia AI mogą pomóc ją wypowiedzieć w sposób,  
+    który wcześniej był niedostępny.
     
     ---
     
     ### 📧 Kontakt
     
-    Jeśli zauważysz **błędy** lub masz **pomysły na usprawnienia** - 
+    Jeśli zauważysz **błędy** lub masz **pomysły na usprawnienia**,  
     skontaktuj się ze mną!
     
     **Email:** awilga.ol@wp.pl
@@ -527,9 +596,9 @@ with tab3:
     
     st.markdown("""
     ### 🛠️ Technologie użyte w projekcie:
-    - **Streamlit** - interfejs użytkownika
-    - **OpenAI GPT-4** - generowanie treści
-    - **DALL-E** - tworzenie ilustracji
-    - **OpenAI TTS** - synteza mowy
-    - **Python** - backend aplikacji
+    - **Streamlit** – interfejs użytkownika  
+    - **OpenAI GPT-4** – generowanie treści  
+    - **DALL·E / GPT-Image** – tworzenie ilustracji  
+    - **OpenAI TTS** – synteza mowy  
+    - **Python** – backend aplikacji  
     """)

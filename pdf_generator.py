@@ -5,13 +5,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PIL import Image
 import os
 import tempfile
-import textwrap
 
 class PDFGenerator:
     def __init__(self):
-        # Absolutna ścieżka do czcionki — działa w Streamlit Cloud
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        font_path = os.path.join(BASE_DIR, "fonts", "DejaVuSans.ttf")
+        font_path = "fonts/DejaVuSans.ttf"
 
         try:
             if os.path.exists(font_path):
@@ -23,27 +20,25 @@ class PDFGenerator:
         except:
             self.font_name = "Helvetica"
 
-        self.page_number = 0  # licznik stron
-
-    # -----------------------------
-    # NUMERACJA STRON
-    # -----------------------------
-    def _draw_page_number(self, c, width, height):
-        """Rysuje numer strony na dole."""
-        c.setFont(self.font_name, 10)
-        c.drawCentredString(width / 2, 20, f"Strona {self.page_number}")
+        self.page_number = 0
 
     # -----------------------------
     # GŁÓWNY GENERATOR PDF
     # -----------------------------
-    def create_pdf(self, story_text, author, cover_image=None, illustrations=None):
+    def create_pdf(self, story_text, author, cover_image=None, illustrations=None, title=""):
         output_path = os.path.join(tempfile.gettempdir(), 'output.pdf')
         c = canvas.Canvas(output_path, pagesize=A4)
         width, height = A4
 
-        self._add_cover_page(c, cover_image, width, height)
-        self._add_title_page(c, author, width, height)
-        self._add_story_content(c, story_text, illustrations, width, height)
+        # Okładka (tylko jeśli została wygenerowana)
+        if cover_image:
+            self._add_cover_page(c, cover_image, width, height)
+        
+        # Strona tytułowa
+        self._add_title_page(c, author, title, width, height)
+        
+        # Treść
+        self._add_story_content(c, story_text, illustrations, width, height, title)
 
         c.save()
         return output_path
@@ -52,7 +47,7 @@ class PDFGenerator:
     # OKŁADKA
     # -----------------------------
     def _add_cover_page(self, c, cover_image, width, height):
-        self.page_number = 0  # okładka bez numeru
+        self.page_number = 0
 
         if hasattr(cover_image, 'save'):
             img_resized = cover_image.copy().resize((int(width), int(height)))
@@ -66,76 +61,98 @@ class PDFGenerator:
     # -----------------------------
     # STRONA TYTUŁOWA
     # -----------------------------
-    def _add_title_page(self, c, author, width, height):
-        self.page_number = 0  # strona tytułowa bez numeru
+    def _add_title_page(self, c, author, title, width, height):
+        self.page_number = 0
 
-        c.setFont(self.font_name, 24)
-        c.drawCentredString(width / 2, height - 150, "Opowiadanie")
-
+        # Tytuł (jeśli jest)
+        if title:
+            c.setFont(self.font_name, 28)
+            c.drawCentredString(width / 2, height - 150, title)
+        
+        # Autor
         c.setFont(self.font_name, 16)
         c.drawCentredString(width / 2, height - 200, f"Autor: {author}")
 
         c.showPage()
 
     # -----------------------------
-    # TREŚĆ OPOWIADANIA
+    # TREŚĆ — wersja książkowa (bez justowania)
     # -----------------------------
-    def _add_story_content(self, c, story_text, illustrations, width, height):
-        self.page_number = 1  # numeracja zaczyna się tutaj
+    def _add_story_content(self, c, story_text, illustrations, width, height, title):
+        self.page_number = 1
 
-        left_margin = 50
-        right_margin = 50
-        max_width = width - left_margin - right_margin
+        left_margin = 60
+        right_margin = 60
+        top_margin = height - 60
+        bottom_margin = 60
+        line_height = 16
+        first_line_indent = 25
+        font_size = 12
 
-        top_margin = height - 50
-        bottom_margin = 50
-        line_height = 15
+        text_width = width - left_margin - right_margin
         y = top_margin
 
         paragraphs = self._split_into_paragraphs(story_text)
         illustration_index = 0
-        paragraph_count = 0
+
+        # Nagłówek z tytułem (jeśli jest) zamiast "Opowiadanie"
+        header_text = title if title else ""
 
         for paragraph in paragraphs:
-            c.setFont(self.font_name, 12)
+            c.setFont(self.font_name, font_size)
 
-            # Łamanie tekstu na podstawie liczby znaków (bez justowania)
-            wrapper = textwrap.TextWrapper(width=85)
-            lines = wrapper.wrap(paragraph)
+            lines = self._wrap_paragraph(paragraph, font_size, text_width)
 
+            first = True
             for line in lines:
-                if y < bottom_margin:
+                if y < bottom_margin + line_height:
                     self._draw_page_number(c, width, height)
                     c.showPage()
                     self.page_number += 1
-                    c.setFont(self.font_name, 12)
+                    if header_text:
+                        self._draw_header(c, width, height, header_text)
+                    c.setFont(self.font_name, font_size)
                     y = top_margin
+                    first = True
 
-                # NORMALNE RYSOWANIE TEKSTU (bez justowania)
-                c.drawString(left_margin, y, line)
+                indent = first_line_indent if first else 0
+                c.drawString(left_margin + indent, y, line)
                 y -= line_height
+                first = False
 
             y -= line_height  # odstęp między akapitami
-            paragraph_count += 1
 
-            # Ilustracja co 3 akapity
+            # Ilustracja po akapicie
             if illustrations and illustration_index < len(illustrations):
-                if paragraph_count % 3 == 0:
-                    y = self._add_illustration(c, illustrations[illustration_index], y, width, height)
-                    illustration_index += 1
+                y = self._add_illustration(c, illustrations[illustration_index], y, width, height)
+                illustration_index += 1
 
-        # Ilustracje po zakończeniu tekstu
+        # Ilustracje na końcu
         while illustrations and illustration_index < len(illustrations):
-            self._draw_page_number(c, width, height)
             c.showPage()
             self.page_number += 1
-            self._add_illustration(c, illustrations[illustration_index], top_margin, width, height)
+            y = height - 60
+            y = self._add_illustration(c, illustrations[illustration_index], y, width, height)
             illustration_index += 1
 
         self._draw_page_number(c, width, height)
 
     # -----------------------------
-    # AUTOMATYCZNE AKAPITY
+    # NAGŁÓWEK
+    # -----------------------------
+    def _draw_header(self, c, width, height, title):
+        c.setFont(self.font_name, 10)
+        c.drawCentredString(width / 2, height - 30, title)
+
+    # -----------------------------
+    # NUMER STRONY
+    # -----------------------------
+    def _draw_page_number(self, c, width, height):
+        c.setFont(self.font_name, 10)
+        c.drawCentredString(width / 2, 20, f"Strona {self.page_number}")
+
+    # -----------------------------
+    # DZIELENIE NA AKAPITY
     # -----------------------------
     def _split_into_paragraphs(self, text):
         raw = text.split("\n")
@@ -156,17 +173,41 @@ class PDFGenerator:
         return paragraphs
 
     # -----------------------------
-    # ILUSTRACJE
+    # ZAWIJANIE TEKSTU PO SZEROKOŚCI STRONY
+    # -----------------------------
+    def _wrap_paragraph(self, paragraph, font_size, max_width):
+        words = paragraph.split()
+        lines = []
+        current_line = ""
+
+        for word in words:
+            test_line = word if not current_line else current_line + " " + word
+            line_width = pdfmetrics.stringWidth(test_line, self.font_name, font_size)
+
+            if line_width <= max_width:
+                current_line = test_line
+            else:
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+
+        if current_line:
+            lines.append(current_line)
+
+        return lines
+
+    # -----------------------------
+    # ILUSTRACJE — czyste strony
     # -----------------------------
     def _add_illustration(self, c, img, y, width, height):
-        """Dodaje ilustrację i zwraca nową pozycję Y."""
-        if y < 450:  # za mało miejsca
-            self._draw_page_number(c, width, height)
+
+        if y < 450:
             c.showPage()
             self.page_number += 1
-            y = height - 50
+            y = height - 60
 
         temp_image_path = os.path.join(tempfile.gettempdir(), 'temp_img.jpg')
+
         img_resized = img.copy().resize((400, 400))
         img_resized.save(temp_image_path)
 

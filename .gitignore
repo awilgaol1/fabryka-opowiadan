@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 *.so
 .Python
-venv/
 env/
+venv/
 ENV/
 build/
 develop-eggs/
@@ -23,10 +23,27 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Środowisko wirtualne
 venv/
 ENV/
 env/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Pliki tymczasowe
+*.tmp
+*.temp
+temp_*.jpg
+temp_*.png
+output.pdf
+audiobook.mp3
+opowiadanie.*
+
+# Klucze API (WAŻNE!)
+.env
+*.key
+secrets.txt
 
 # IDE
 .vscode/
@@ -35,28 +52,10 @@ env/
 *.swo
 *~
 
-# Streamlit
-.streamlit/secrets.toml
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Output files
-*.pdf
-*.epub
-*.mobi
-*.mp3
-
-# Environment variables
-.env
-.env.local
-
-# OS
+# System
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logi
 *.log
+testy.py

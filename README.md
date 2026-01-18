@@ -1,137 +1,122 @@
 📚 Fabryka Opowiadań
-Aplikacja do generowania opowiadań z wykorzystaniem sztucznej inteligencji (OpenAI GPT-4 i DALL-E).
+Aplikacja do tworzenia spersonalizowanych opowiadań z wykorzystaniem AI
 
-🌟 Funkcje
-✍️ Generowanie opowiadań w różnych gatunkach i stylach
-🎨 Tworzenie ilustracji przez DALL-E
-📖 Generowanie okładek książek
-📝 Edytor z możliwością modyfikacji tekstu
-📄 Eksport do PDF
-📚 Eksport do eBook (EPUB/MOBI)
-🎧 Generowanie audiobooka (MP3) z wyborem głosu
-👥 Możliwość definiowania bohaterów i ich charakterów
-🎭 Wybór gatunku, miejsca akcji i typu zakończenia
-🚀 Instalacja i uruchomienie lokalne
-1. Wymagania wstępne
-Python 3.10 lub nowszy
-Konto OpenAI z aktywnym API key
-Conda lub venv
-2. Klonowanie repozytorium
+Generuj unikalne historie z ilustracjami, okładkami i eksportuj je do PDF, EPUB lub audiobooka MP3!
+
+Show Image
+Show Image
+Show Image
+
+✨ Funkcje
+📝 Generowanie opowiadań - wybierz parametry i stwórz unikalną historię
+🎨 Ilustracje AI - automatyczne tworzenie obrazów w różnych stylach
+📖 Okładki książkowe - profesjonalne okładki z tytułem i autorem
+📄 Eksport do PDF - pięknie sformatowane dokumenty
+📚 eBook (EPUB/MOBI) - gotowe do czytania na e-readerach
+🎧 Audiobooki MP3 - synteza mowy z OpenAI TTS
+✏️ Edycja i modyfikacja - poprawiaj i dostosuj opowiadanie
+🚀 Instalacja
+1. Sklonuj repozytorium
 bash
-git clone https://github.com/TWOJA_NAZWA/fabryka-opowiadan.git
+git clone https://github.com/TwojeNazwaUzytkownika/fabryka-opowiadan.git
 cd fabryka-opowiadan
-3. Tworzenie środowiska wirtualnego
-Opcja A: Conda (zalecane)
-
-bash
-conda create -n fabryka-opowiadan python=3.11 -y
-conda activate fabryka-opowiadan
-Opcja B: venv
-
+2. Utwórz środowisko wirtualne
 bash
 python -m venv venv
-# Windows:
+
+# Windows
 venv\Scripts\activate
-# Mac/Linux:
+
+# macOS/Linux
 source venv/bin/activate
-4. Instalacja zależności
+3. Zainstaluj zależności
 bash
 pip install -r requirements.txt
-5. Uruchomienie aplikacji
+4. Dodaj czcionkę DejaVuSans
+Pobierz czcionkę DejaVuSans.ttf i umieść ją w folderze fonts/
+
+🔑 Konfiguracja
+Klucz API OpenAI
+Aplikacja wymaga klucza API OpenAI. Możesz go uzyskać na platform.openai.com.
+
+Opcja 1: Wprowadź w aplikacji
+
+Uruchom aplikację i wpisz klucz w panelu bocznym
+Opcja 2: Plik .env (opcjonalnie)
+
+bash
+cp .env.example .env
+# Edytuj .env i dodaj swój klucz
+OPENAI_API_KEY=sk-...
+💻 Uruchomienie
 bash
 streamlit run app.py
 Aplikacja otworzy się w przeglądarce pod adresem http://localhost:8501
 
-🌐 Deployment na Streamlit Cloud
-Krok 1: Przygotowanie repozytorium GitHub
-Stwórz nowe repozytorium na GitHub
-Dodaj wszystkie pliki:
-bash
-git init
-git add .
-git commit -m "Initial commit - Fabryka Opowiadań"
-git branch -M main
-git remote add origin https://github.com/TWOJA_NAZWA/fabryka-opowiadan.git
-git push -u origin main
-Krok 2: Deployment na Streamlit Cloud
-Wejdź na https://share.streamlit.io/
-Zaloguj się przez GitHub
-Kliknij "New app"
-Wybierz:
-Repository: fabryka-opowiadan
-Branch: main
-Main file path: app.py
-Kliknij "Deploy"
-Krok 3: Konfiguracja Secrets (OpenAI API Key)
-Możesz dodać swój klucz API jako secret:
-
-W Streamlit Cloud kliknij "Settings" → "Secrets"
-Dodaj:
-toml
-OPENAI_API_KEY = "sk-twoj-klucz-api"
-📖 Jak używać aplikacji
-1. Połączenie z OpenAI API
-W panelu bocznym wprowadź swój klucz API OpenAI
-Kliknij "Połącz z API"
-2. Wybór parametrów
-Wybierz model GPT (GPT-4o-mini lub GPT-4o)
-Ustaw długość opowiadania (1500-3500 słów)
-Wybierz grupę wiekową i gatunek
-Określ miejsce akcji i typ zakończenia
-3. Dodaj bohaterów
-Podaj głównego bohatera (imię + opis)
-Dodaj dodatkowych bohaterów z określeniem charakteru
-4. Ilustracje i okładka
-Zaznacz czy chcesz ilustracje i ile
-Wybierz styl ilustracji
-Dodaj szkic okładki i opis
-5. Generowanie
+📖 Jak używać
+1. Tworzenie opowiadania
+Podłącz klucz API OpenAI
+Wybierz parametry (gatunek, grupa wiekowa, długość)
+Dodaj bohaterów
+Opcjonalnie: włącz generowanie ilustracji i okładki
 Kliknij "Generuj opowiadanie"
-Poczekaj na wygenerowanie treści
-6. Edycja i eksport
-Edytuj tekst w zakładce "Edycja i Export"
-Generuj ilustracje dla wybranych fragmentów
-Eksportuj do PDF, EPUB/MOBI lub audiobooka MP3
+2. Edycja
+Wybierz tytuł z propozycji lub wpisz własny
+Nałóż tytuł na okładkę
+Edytuj tekst opowiadania
+Generuj dodatkowe ilustracje dla fragmentów
+3. Export
+Wybierz ilustracje do PDF
+Eksportuj do wybranego formatu:
+📄 PDF
+📚 EPUB/MOBI
+🎧 MP3 (wymaga FFmpeg)
+🎧 Audiobooki (opcjonalnie)
+Generowanie audiobooków wymaga FFmpeg:
+
+Windows
+bash
+# Pobierz FFmpeg z https://ffmpeg.org/
+# Dodaj do PATH
+macOS
+bash
+brew install ffmpeg
+Linux
+bash
+sudo apt-get install ffmpeg
 🛠️ Technologie
-Streamlit - framework do tworzenia aplikacji webowych
-OpenAI GPT-4 - generowanie treści opowiadań
-DALL-E 3 - tworzenie ilustracji
-OpenAI TTS - synteza mowy (audiobook)
-FPDF2 - generowanie PDF
-ebooklib - tworzenie eBook
+Streamlit - interfejs użytkownika
+OpenAI GPT-4 - generowanie tekstu
+DALL-E / GPT-Image - tworzenie ilustracji
+OpenAI TTS - synteza mowy
+ReportLab - generowanie PDF
+EbookLib - tworzenie EPUB
 Pillow - przetwarzanie obrazów
-Pydub - edycja audio
-⚠️ Uwagi
-Koszty OpenAI API
-Korzystanie z aplikacji wiąże się z kosztami OpenAI API:
+PyDub - edycja audio
+📋 Wymagania systemowe
+Python 3.8+
+2GB RAM (4GB zalecane)
+Klucz API OpenAI
+FFmpeg (tylko dla audiobooków)
+🐛 Znane problemy
+"Moderation blocked" przy generowaniu obrazów
+OpenAI może blokować niektóre prompty. Aplikacja automatycznie próbuje alternatywnych promptów. Jeśli problem się powtarza, użyj bardziej ogólnych opisów.
 
-GPT-4o: ~$0.005 / 1K tokens
-GPT-4o-mini: ~$0.00015 / 1K tokens
-DALL-E 3: ~$0.040 / obraz (1024x1024)
-TTS: ~$0.015 / 1K znaków
-Limity
-Długość opowiadania: maksymalnie 3500 słów (ze względu na limity API)
-Ilustracje: maksymalnie 10 na opowiadanie
-Audiobook: maksymalnie ~10,000 znaków na fragment
-📝 Licencja
-MIT License - możesz swobodnie używać i modyfikować kod.
-
-👤 Autorka
-Anna Wilga
-
-Email: awilga.ol@wp.pl
-
-Jeśli masz pytania, pomysły lub zauważysz błędy - skontaktuj się ze mną!
+Brak FFmpeg na Streamlit Cloud
+Audiobooki nie działają na Streamlit Cloud. Uruchom aplikację lokalnie lub na serwerze z FFmpeg.
 
 🤝 Wkład w projekt
-Pull requesty są mile widziane! W przypadku większych zmian, najpierw otwórz issue, aby omówić zmiany.
+Zgłaszaj błędy i sugestie przez Issues
 
-📋 TODO / Przyszłe funkcje
- Dodanie więcej stylów ilustracji
- Eksport do innych formatów (DOCX, TXT)
- Możliwość zapisu i wczytywania projektów
- Historia wygenerowanych opowiadań
- Udostępnianie opowiadań (link publiczny)
- Wsparcie dla innych języków
-Stworzone z ❤️ przez Anna Wilga
+📧 Kontakt
+Anna Wilga
+Email: awilga.ol@wp.pl
+
+📄 Licencja
+MIT License - możesz swobodnie używać i modyfikować kod.
+
+⭐ Podziękowania
+Dziękuję za korzystanie z Fabryki Opowiadań! ✨
+
+Jeśli projekt Ci się podoba, zostaw gwiazdkę ⭐ na GitHubie!
 
