@@ -1,6 +1,5 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
@@ -8,17 +7,31 @@ from PIL import Image
 import os
 import tempfile
 import textwrap
+import urllib.request
 
 class PDFGenerator:
     def __init__(self):
-        # Rejestrujemy czcionkę z obsługą Unicode (wbudowana w ReportLab)
+        self.font_name = self._setup_font()
+    
+    def _setup_font(self):
+        """Konfiguruje czcionkę z obsługą polskich znaków"""
         try:
-            # Próbujemy użyć czcionki systemowej
-            pdfmetrics.registerFont(TTFont('ArialUnicode', 'arial.ttf'))
-            self.font_name = 'ArialUnicode'
-        except:
-            # Fallback - używamy Helvetica (podstawowa obsługa)
-            self.font_name = 'Helvetica'
+            # Ścieżka do czcionki w temp
+            temp_dir = tempfile.gettempdir()
+            font_path = os.path.join(temp_dir, 'DejaVuSans.ttf')
+            
+            # Jeśli nie ma czcionki, pobierz ją
+            if not os.path.exists(font_path):
+                font_url = 'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf'
+                urllib.request.urlretrieve(font_url, font_path)
+            
+            # Zarejestruj czcionkę
+            pdfmetrics.registerFont(TTFont('DejaVu', font_path))
+            return 'DejaVu'
+        except Exception as e:
+            # Fallback - użyj Helvetica (ale nie obsługuje polskich znaków)
+            print(f"Nie udało się załadować czcionki: {e}")
+            return 'Helvetica'
     
     def create_pdf(self, story_text, author_name, cover_image=None, illustrations=None):
         """Tworzy PDF z opowiadaniem"""
@@ -67,7 +80,7 @@ class PDFGenerator:
         """Dodaje stronę tytułową"""
         
         # Tytuł
-        c.setFont(self.font_name + '-Bold' if self.font_name == 'Helvetica' else self.font_name, 24)
+        c.setFont(self.font_name, 24)
         title_text = 'Opowiadanie'
         c.drawCentredString(width / 2, height - 200, title_text)
         
@@ -101,8 +114,9 @@ class PDFGenerator:
             if not paragraph.strip():
                 continue
             
-            # Zawijanie tekstu
-            wrapper = textwrap.TextWrapper(width=80)
+            # Zawijanie tekstu - większa szerokość dla tekstu
+            max_chars_per_line = int((right_margin - left_margin) / 6)
+            wrapper = textwrap.TextWrapper(width=max_chars_per_line)
             lines = wrapper.wrap(paragraph.strip())
             
             for line in lines:
@@ -113,7 +127,13 @@ class PDFGenerator:
                     y_position = top_margin
                 
                 # Narysuj linię tekstu
-                c.drawString(left_margin, y_position, line)
+                try:
+                    c.drawString(left_margin, y_position, line)
+                except Exception as e:
+                    # Jeśli błąd z czcionką, spróbuj bez polskich znaków
+                    safe_line = line.encode('ascii', 'ignore').decode('ascii')
+                    c.drawString(left_margin, y_position, safe_line)
+                
                 y_position -= line_height
             
             # Dodatkowa przerwa między akapitami
