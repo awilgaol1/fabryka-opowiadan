@@ -3,8 +3,15 @@ import openai
 from story_generator import StoryGenerator
 from pdf_generator import PDFGenerator
 from ebook_generator import EbookGenerator
-from audio_generator import AudioGenerator
 import os
+
+# Warunkowy import audiobooka (nie działa na Streamlit Cloud bez FFmpeg)
+try:
+    from audio_generator import AudioGenerator
+    AUDIO_AVAILABLE = True
+except ImportError:
+    AUDIO_AVAILABLE = False
+    st.warning("⚠️ Audiobook niedostępny na Streamlit Cloud (brak FFmpeg). Pobierz aplikację lokalnie aby używać tej funkcji.")
 
 # Konfiguracja strony
 st.set_page_config(
@@ -447,32 +454,35 @@ with tab2:
                     st.error(f"❌ Błąd: {str(e)}")
         
         with col_exp3:
-            st.write("**Audiobook MP3**")
-            voice = st.selectbox("Głos", ["alloy", "echo", "fable", "onyx", "nova"])
-            speed = st.slider("Szybkość", 0.5, 2.0, 1.0, 0.1)
-            audio_format = st.radio("Format", ["Jeden plik", "Rozdziały"])
-            
-            if st.button("🎧 Generuj audiobook", use_container_width=True):
-                with st.spinner("🎧 Tworzę audiobook..."):
-                    try:
-                        audio_gen = AudioGenerator(st.session_state.api_key)
-                        audio_file = audio_gen.create_audiobook(
-                            st.session_state.story_text,
-                            voice,
-                            speed,
-                            audio_format == "Rozdziały"
-                        )
-                        
-                        with open(audio_file, "rb") as f:
-                            st.download_button(
-                                label="⬇️ Pobierz MP3",
-                                data=f,
-                                file_name="audiobook.mp3",
-                                mime="audio/mpeg",
-                                use_container_width=True
+            if AUDIO_AVAILABLE:
+                st.write("**Audiobook MP3**")
+                voice = st.selectbox("Głos", ["alloy", "echo", "fable", "onyx", "nova"])
+                speed = st.slider("Szybkość", 0.5, 2.0, 1.0, 0.1)
+                audio_format = st.radio("Format", ["Jeden plik", "Rozdziały"])
+                
+                if st.button("🎧 Generuj audiobook", use_container_width=True):
+                    with st.spinner("🎧 Tworzę audiobook..."):
+                        try:
+                            audio_gen = AudioGenerator(st.session_state.api_key)
+                            audio_file = audio_gen.create_audiobook(
+                                st.session_state.story_text,
+                                voice,
+                                speed,
+                                audio_format == "Rozdziały"
                             )
-                    except Exception as e:
-                        st.error(f"❌ Błąd: {str(e)}")
+                            
+                            with open(audio_file, "rb") as f:
+                                st.download_button(
+                                    label="⬇️ Pobierz MP3",
+                                    data=f,
+                                    file_name="audiobook.mp3",
+                                    mime="audio/mpeg",
+                                    use_container_width=True
+                                )
+                        except Exception as e:
+                            st.error(f"❌ Błąd: {str(e)}")
+            else:
+                st.info("🎧 **Audiobook**\n\nFunkcja audiobooka wymaga lokalnej instalacji z FFmpeg.\n\nPobierz kod z GitHub i uruchom lokalnie aby używać tej funkcji.")
         
         # Podgląd ilustracji
         if st.session_state.generated_images:
