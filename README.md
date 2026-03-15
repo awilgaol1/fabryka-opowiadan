@@ -18,7 +18,8 @@ Show Image
 🚀 Instalacja
 1. Sklonuj repozytorium
 bash
-git clone https://github.com/TwojeNazwaUzytkownika/fabryka-opowiadan.git
+git clone https://github.com/awilgaol1/fabryka-opowiadan.git
+
 cd fabryka-opowiadan
 2. Utwórz środowisko wirtualne
 bash
